@@ -24,6 +24,7 @@ use phpDocumentor\Reflection\Types\Self_;
 use phpDocumentor\Reflection\Types\Static_;
 use ReflectionClass;
 use ReflectionMethod;
+use think\db\connector\Mysql;
 use think\facade\Env;
 use think\model\relation\BelongsTo;
 use think\model\relation\BelongsToMany;
@@ -177,10 +178,31 @@ class Command extends \think\console\Command
     }
 
     /**
+     * 获取表字段注释
+     * @param Model $model
+     * @return array
+     * @throws \think\db\exception\BindParamException
+     * @throws \think\exception\PDOException
+     */
+    protected function getTableFieldComments(Model $model)
+    {
+        if(false === $model->getConnection() instanceof Mysql) {
+            return [];
+        }
+        $field_comments = [];
+        foreach ($model->query(sprintf('SHOW FULL COLUMNS FROM %s', $model->getTable())) ?? [] as $comment) {
+            $field_comments[$comment['Field']] = $comment['Comment'];
+        }
+        return $field_comments;
+    }
+
+    /**
      * 从数据库读取字段信息
      * @param string $class
      * @param Model  $model
      * @throws \ReflectionException
+     * @throws \think\db\exception\BindParamException
+     * @throws \think\exception\PDOException
      */
     protected function getPropertiesFromTable($class, Model $model)
     {
@@ -191,6 +213,8 @@ class Command extends \think\console\Command
         $table = $this->getTable($model);
 
         $columns = $table->getColumns();
+
+        $fieldComments = $this->getTableFieldComments($model);
 
         if ($columns) {
             foreach ($columns as $column) {
@@ -270,7 +294,7 @@ class Command extends \think\console\Command
                             break;
                     }
                 }
-                $comment = $column->getComment();
+                $comment = empty($column->getComment()) ? ($fieldComments[$name] ?? '') : $column->getComment();
                 $this->setProperty($name, $type, true, true, $comment);
 
             }
