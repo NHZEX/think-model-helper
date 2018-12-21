@@ -24,6 +24,7 @@ use phpDocumentor\Reflection\Types\Self_;
 use phpDocumentor\Reflection\Types\Static_;
 use ReflectionClass;
 use ReflectionMethod;
+use think\facade\Env;
 use think\model\relation\BelongsTo;
 use think\model\relation\BelongsToMany;
 use think\model\relation\HasMany;
@@ -179,6 +180,7 @@ class Command extends \think\console\Command
      * 从数据库读取字段信息
      * @param string $class
      * @param Model  $model
+     * @throws \ReflectionException
      */
     protected function getPropertiesFromTable($class, Model $model)
     {
@@ -279,6 +281,7 @@ class Command extends \think\console\Command
      * 自动生成获取器和修改器以及关联对象的属性信息
      * @param $class
      * @param $model
+     * @throws \ReflectionException
      */
     protected function getPropertiesFromMethods($class, $model)
     {
@@ -354,7 +357,7 @@ class Command extends \think\console\Command
 
     /**
      * @param string $class
-     * @return string
+     * @throws \ReflectionException
      */
     protected function createPhpDocs($class)
     {
@@ -512,6 +515,7 @@ class Command extends \think\console\Command
     /**
      * @param ReflectionMethod $method
      * @return array
+     * @throws \ReflectionException
      */
     protected function getParameters($method)
     {
@@ -551,7 +555,7 @@ class Command extends \think\console\Command
     {
         $models = [];
         foreach ($this->dirs as $dir) {
-            $dir = APP_PATH . '/' . $dir;
+            $dir = Env::get('app_path') . '/' . $dir;
             if (file_exists($dir)) {
                 foreach (ClassMapGenerator::createMap($dir) as $model => $path) {
                     $models[] = $model;
