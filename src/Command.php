@@ -375,6 +375,7 @@ class Command extends \think\console\Command
         $typeResolver       = new TypeResolver($fqsenResolver);
 
         $properties = [];
+        $properties_desc = [];
         $methods    = [];
         $tags       = [];
         if (!$this->reset) {
@@ -392,7 +393,8 @@ class Command extends \think\console\Command
                             //覆盖原来的
                             unset($tags[$key]);
                         } else {
-                            $properties[] = $tag->getVariableName();
+                            $properties[] = $tmp_propertie = $tag->getVariableName();
+                            $properties_desc[$tmp_propertie] = $tag->getDescription()->render();
                         }
                     } elseif ($tag instanceof DocBlock\Tags\Method) {
                         if ($this->overwrite && array_key_exists($tag->getMethodName(), $this->methods)) {
